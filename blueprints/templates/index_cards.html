@@ -1,0 +1,21 @@
+{% extends "layout.html" %} 
+
+{% block content %}
+<div class="top-pad">
+    {% for specification in specifications %}
+        <div class="card mb-2">
+            <div class="card-body">
+                {% if with_link %}
+                    <h3><a class="h3 link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
+                        href="{{ url_base }}/{{ initial_view }}/{{ specification.specification_id }}{% if query_string %}?{{ query_string | urlencode }}{% endif %}">
+                        {{ specification.title }}
+                    </a></h3>
+                {% else %}
+                    <h3>{{ specification.title }}</h3>
+                {% endif %}
+                {{ specification.summary }}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
