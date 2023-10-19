@@ -16,6 +16,9 @@ from pg_shared import blueprints
 from flask import request
 from werkzeug.exceptions import HTTPException
 
+import pandas as pd
+import markdown
+
 
 # for Flask exceptions - see prepare_app()
 def basic_error(e):
@@ -119,7 +122,7 @@ class Core:
         self.relay_activity = True
         
         # set up cosmos db (read in setting and access key)
-        # NOTE: must set up database and container in CosmosDB (in Azure or emulator); set session_id as the partition key
+        # NOTE: must set up database and container in CosmosDB (in Azure or emulator); set plaything_name as the partition key
         self.record_activity_config = self.core_config.get("activity", {"enabled": False})
         self.record_activity_container = None
         if self.record_activity_config.get("enabled", False):
@@ -338,7 +341,6 @@ class Specification:
         return asset_file
     
     def load_asset_dataframe(self, asset_key, dtypes=None):
-        import pandas as pd
         asset_file = self._asset_preload(asset_key, "csv")
         if asset_file is None:
             return None
@@ -346,7 +348,6 @@ class Specification:
         return pd.read_csv(asset_file, dtype=dtypes)
 
     def load_asset_markdown(self, asset_key, render=False):
-        import markdown
         asset_file = self._asset_preload(asset_key, "md")
         if asset_file is None:
             return None
