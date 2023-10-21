@@ -8,6 +8,7 @@ from logging.handlers import RotatingFileHandler
 from logging import StreamHandler
 
 from azure.cosmos import CosmosClient
+from azure.core.exceptions import ServiceRequestError
 
 from dash import html
 
@@ -16,9 +17,13 @@ from pg_shared import blueprints
 from flask import request
 from werkzeug.exceptions import HTTPException
 
-import pandas as pd
+#  import pandas as pd  # pandas import is responsible for slow start-up of the app so moved to function where used
 import markdown
+from csv import DictReader
 
+# this suppresses the spammy logging of request and response headers for the CosmosDB interactions. It may suppress more...
+cosmos_logger = logging.getLogger("azure")
+cosmos_logger.setLevel(logging.WARN)
 
 # for Flask exceptions - see prepare_app()
 def basic_error(e):
@@ -133,6 +138,8 @@ class Core:
             except KeyError as ex:
                 logging.error("Failed to set up activity logging. Likely cause is a mis-configuration of environment variables or defective core_config.json. "
                               f"Missing key is: {ex}")
+            except ServiceRequestError as ex:
+                logging.error("Failed to set up activity logging due to a ServiceRequestError when attempting a CosmosDB connection.")
         else:
             logging.warn("Activity logging is disabled. Refer to core_config.json.")
 
@@ -345,7 +352,28 @@ class Specification:
         if asset_file is None:
             return None
         
+        import pandas as pd
         return pd.read_csv(asset_file, dtype=dtypes)
+
+    def load_asset_records_dict(self, asset_key):
+        """Reads a CSV file and returns a list of dicts, where each dict represents one row and uses for its keys the entries in the first line.
+
+        All values are strings.
+
+        :param asset_key: _description_
+        :type asset_key: _type_
+        :return: _description_
+        :rtype: _type_
+        """
+        asset_file = self._asset_preload(asset_key, "csv")
+        if asset_file is None:
+            return None
+        
+        with open(asset_file, 'r', newline='') as f:
+            reader = DictReader(f)
+            records = list(reader)
+        
+        return records
 
     def load_asset_markdown(self, asset_key, render=False):
         asset_file = self._asset_preload(asset_key, "md")
