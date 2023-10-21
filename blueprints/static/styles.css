@@ -1,0 +1,19 @@
+.check-cross{
+    appearance: initial;
+    background: lightgray;
+    width: 25px;
+    height: 25px;
+    border: none;
+    position: relative;
+}
+.check-cross:checked {
+    background: blue;
+}
+.check-cross:checked:after {
+    content: "X";
+    color: #fff;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+}
