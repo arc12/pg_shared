@@ -36,7 +36,7 @@ def basic_error(e):
     logging.exception(e)
     return "An error occurred. It has been logged."
 
-def prepare_app(flask_app):
+def prepare_app(flask_app, url_prefix):
     """Does standard prep of the Flask app object
 
     :param flask_app: _description_
@@ -48,7 +48,7 @@ def prepare_app(flask_app):
     flask_app.secret_key = environ.get("FLASK_COOKIE_KEY", "WGFEhV5j3muB5A")
 
     # shared templates and CSS
-    flask_app.register_blueprint(blueprints.core_bp)
+    flask_app.register_blueprint(blueprints.make_core_bp(url_prefix))
 
     # log exceptions
     flask_app.register_error_handler(Exception, basic_error)
@@ -86,7 +86,7 @@ class Core:
     def __init__(self, plaything_name: str):
         self.plaything_name = plaything_name
 
-        # check env vars to determine whether running as a function app
+        # check env vars to determine whether running as a function app running on Azure
         self.is_function_app = "AzureWebJobsStorage" in environ
 
         # set up python logging if required. Function apps log into Azure Application Insights, which requires no spec here, but for other use:
@@ -277,16 +277,16 @@ class Specification:
             menu = html.Header(
                 [
                     html.Span("DLP | ", className="ms-2"),
-                    html.Ul(items, className="nav col-md-auto mb-1 justify-content-start mb-md-0"
+                    html.Ul(items, className="nav col-md-auto justify-content-start mb-md-0"
                     )
                 ],
                 className="d-flex flex-row flex-wrap align-items-center justify-content-start py-2 mb-4 border-bottom"
             )
         else:
             header = """
-            <header class="d-flex flex-row flex-wrap align-items-center justify-content-start py-2 mb-4 border-bottom">    
+            <header class="d-flex flex-row flex-wrap align-items-center justify-content-start py-2 mb-3 border-bottom">    
                 <span class="ms-2">DLP |</span>
-                <ul class="nav col-md-auto mb-1 justify-content-start mb-md-0">{items_string}</ul>
+                <ul class="nav col-md-auto justify-content-start mb-md-0">{items_string}</ul>
             </header>"""
             menu = header.format(items_string="\n".join(items))
         
