@@ -232,6 +232,7 @@ class Specification:
         self.title = specification.get("title", f"<missing title for {specification_id}>")
         self.summary = specification.get("summary", "")
         self.lang = specification.get("lang", "en")
+        self.initial_view = specification.get("initial_view", None)
         self.detail = specification.get("detail", dict())
         self.menu_items = specification.get("menu_items", "*")
         self.asset_map = specification.get("asset_map", dict())
