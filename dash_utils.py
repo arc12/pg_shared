@@ -23,3 +23,18 @@ def create_dash_app_util(server, url_rule, url_base_pathname, top_menu_items=())
     # dash_app._favicon = "core_static/favicon.ico"
 
     return dash_app
+
+def add_dash_to_routes(app, dash_app, plaything_root):
+    """Adds a dash app to the Flask routes
+
+    :param app: Flask app
+    :type app: _type_
+    :param dash_app: Python module containing code for the Dash app. Will contain a create_dash() function and have a view_name public property
+    :type dash_app: _type_
+    :param plaything_root: URL prefix
+    :type plaything_root: str
+    :return: Flask app with added route
+    :rtype: _type_
+    """
+    view_name = dash_app.view_name
+    return dash_app.create_dash(app, f"{plaything_root}/{view_name}/<specification_id>", f"{plaything_root}/dash/{view_name}/")
