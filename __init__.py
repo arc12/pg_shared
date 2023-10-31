@@ -2,6 +2,7 @@ from os import environ, makedirs, path, listdir
 import sys
 import json
 import uuid
+import pickle
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -152,8 +153,9 @@ class Core:
 
         :param include_disabled: _description_, defaults to False
         :type include_disabled: bool, optional
-        :param check_assets: _description_, defaults to []
-        :type check_assets: list, optional
+        :param check_assets: defaults to []. Either a list of keys in asset_map element of the specification OR a pointer to a function which will take
+            the details element as input and return a list of keys. This allows for plaything-specific cases where the details determine which assets are needed.
+        :type check_assets: list|callable, optional
         :param check_optional_assets: _description_, defaults to []
         :type check_optional_assets: list, optional
         :return: _description_
@@ -164,8 +166,12 @@ class Core:
         for specification_id in self.specification_ids:
             spec = Specification(self.config_plaything_path, specification_id)
             if include_disabled or spec.enabled:
-                if len(check_assets + check_optional_assets) > 0:
-                    spec.check_assets(check_assets, optional_keys=check_optional_assets, update_spec=True)  # updates spec.summary in place
+                try:
+                    check_assets_ = check_assets(spec.detail) if callable(check_assets) else check_assets
+                except:
+                    check_assets_ = []
+                if len(check_assets_ + check_optional_assets) > 0:
+                    spec.check_assets(check_assets_, optional_keys=check_optional_assets, update_spec=True)  # updates spec.summary in place
                 specifications.append(spec)
         
         return specifications
@@ -388,3 +394,12 @@ class Specification:
             return markdown.markdown(md)
         else:
             return md
+
+    def load_asset_object(self, asset_key):
+        # un-pickles something
+        asset_file = self._asset_preload(asset_key, "pickle")
+        if asset_file is None:
+            return None
+    
+        with open(asset_file, 'rb') as f:
+            return pickle.load(f)
