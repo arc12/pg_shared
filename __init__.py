@@ -35,7 +35,8 @@ def basic_error(e):
     # this covers other errors, which would normally ripple through as a 500.
     logging.error("Error processing request to {}. Exception information follows:".format(request.path))
     logging.exception(e)
-    return "An error occurred. It has been logged."
+    msg = f"An error occurred. It has been logged.<hr/> {e.__class__.__name__} : {e}"
+    return msg
 
 def prepare_app(flask_app, url_prefix):
     """Does standard prep of the Flask app object
