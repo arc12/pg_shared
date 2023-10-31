@@ -15,7 +15,7 @@ from dash import html
 
 from pg_shared import blueprints
 
-from flask import request
+from flask import request, abort
 from werkzeug.exceptions import HTTPException
 
 #  import pandas as pd  # pandas import is responsible for slow start-up of the app so moved to function where used
@@ -144,9 +144,22 @@ class Core:
         else:
             logging.warn("Activity logging is disabled. Refer to core_config.json.")
 
-    def get_specification(self, specification_id):
+    def get_specification(self, specification_id, flask_404=True):
+        """_summary_
+
+        :param specification_id: _description_
+        :type specification_id: _type_
+        :param flask_404: If True, check whether the passed specification id is known and if not causes a Flask abort(404) with a suitable messsage, defaults to True
+        :type flask_404: bool, optional
+        :return: _description_
+        :rtype: _type_
+        """
+        if flask_404 and specification_id not in self.specification_ids:
+            msg = f"Request with invalid specification id = {specification_id} for plaything {self.plaything_name}"
+            logging.warn(msg)
+            abort(404, msg)
         return Specification(self.config_plaything_path, specification_id)
-    
+        
     def get_specifications(self, include_disabled=False, check_assets=[], check_optional_assets=[]):
         """
         Also performs a check of assets (conditional on parameters)
