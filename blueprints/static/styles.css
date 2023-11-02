@@ -7,7 +7,7 @@
     position: relative;
 }
 .check-cross:checked {
-    background: blue;
+    background: darkgrey;
 }
 .check-cross:checked:after {
     content: "X";
