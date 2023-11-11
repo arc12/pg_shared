@@ -1,42 +1,15 @@
 # Data Literacy Playground Shared ("pg_shared")
 _This repository contains core code which is used in each of the Playthings AND documentation for Plaything development and deployment/hosting etc. For the time-being, it also documents the core configuration settings (single file applicable to all Playthings) and common elements of the Plaything Specifications (which provide the settings for each instance of a Plaything)._
 
+__Refer to "Plaything Configuration.md" for information on the content of configuration files"; the notes here are developer-focussed.__
+
 ## Playground Configuration Files
 All playthings have a separate configuration folder - named according to the PLAYTHING_NAME variable in the core Plaything Python file (see below) - within a root configuration folder which applies to the whole Playground. The root configuration folder should be located as follows:
 - for local development and plain Flask execution, in ../Config relative to the plaything source code folder.
 - for Azure Function App execution, in an Azure File Share mounted as /Config.
 
 ### Core Configuration
-A single file, "core_config.json" in the root configuration folder.
-
-### Plaything Configuration (aka Specification)
-The collection of configuration files for how the plaything should be realised is referred to a Specification. There is no default Specification; they must always be defined. Indeed: the expectation is that there will be several Specifications defined in order that the conceptual plaything can be realised across a range of contexts and examples.
-
-The starting point for the specification is a JSON file inside the plaything configuration folder (named according to PLAYTHING_NAME). The __specification id__ is the file-name less the ".json" extension and this file is generically called the "specification core file". This is used to construct URLs, which are of the form: {site name}/{plaything name}/{view}/{specification id}. Each plaything may have one or more views; these are defined in the README for the Plaything.
-
-The specification core file contains the following elements which are common to all playthings:
-- enabled
-- title
-- summary
-- data_source = an optional element to indicate where the data used in this specification came from.
-- initial_view = the name of a view which is the logical starting point. NB: this is only used from the index page.
-- lang = a two-character language indicator (e.g. en, fr, zh) which is used to retrieve suitable words/phrases to use e.g. in the menu. NB: adding new languages requires modifications to the source code.
-- detail = a container for plaything-specific specification - see the README for the Plaything.
-- menu = an ordered list of the Plaything views which should be included in the menu (see the README for the Plaything for a list of the views).
-- asset_map = provides the link from Plaything-defined asset codes to specific files - see the README for the Plaything.
-
-## URL Structure, Parameters, and Index/Validation URLs
-URLs which render user-facing views are of the form: {site name}/{plaything name}/{view}/{specification id}.
-
-Two parameters are defined, which can be added as required:
-- adding menu=1 will cause a menu to be rendered, according to the __menu__ element in the Specification.
-- a tag parameter will be recorded in the activity logs, for example to allow discrimination between logs for different groups of users. Tags should be simple strings of alphanumeric characters.
-
-Example (note the "?" and "&" characters which start and separate parameters): {site name}/{plaything name}/{view}/{specification id}?menu=1&tag=group1
-
-In addition to the user-facing views, the following are available for all Playthings:
-- an index page at {site name}/{plaything name} lists all of the enabled Specifications. Each title is a link to the __initial_view__.
-- a simple validation page at {site name}/{plaything name}/validation. This shows all of the Specifications, including those which are disabled, and gives a simple indication of key Specification errors such as syntax errors in the JSON file or missing asset entries/files.
+A single file, "core_config.json" in the root configuration folder. This applies to all deployed Playthings
 
 ## Code Organisation and Naming Conventions and Relationship to Runtime/Deployment Options
 _The following assumes that VSCode is used._  
