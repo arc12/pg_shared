@@ -89,7 +89,8 @@ class Core:
         self.plaything_name = plaything_name
 
         # check env vars to determine whether running as a function app running on Azure
-        self.is_function_app = "AzureWebJobsStorage" in environ
+        # Used to use "AzureWebJobsStorage" but it now gives True for local use since adding the Timer
+        self.is_function_app = "WEBSITE_CONTENTSHARE" in environ
 
         # set up python logging if required. Function apps log into Azure Application Insights, which requires no spec here, but for other use:
         if not self.is_function_app:
