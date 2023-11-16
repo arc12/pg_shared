@@ -18,7 +18,7 @@ from pg_shared import blueprints
 from flask import request, abort
 from werkzeug.exceptions import HTTPException
 
-#  import pandas as pd  # pandas import is responsible for slow start-up of the app so moved to function where used
+import pandas as pd  # pandas import is responsible for slow start-up of the app so use of "keep_warm" timerTrigger functions is recommended
 import markdown
 from csv import DictReader
 
@@ -121,9 +121,12 @@ class Core:
 
         # how should the URL paths start
         self.plaything_root = "/" + self.plaything_name.lower() if self.core_config.get("plaything_name_in_path", False) else ""
+
+        # enable timerTrigger
+        self.keep_warm = self.core_config.get("keep_warm", False)
         
         # language code for built-in strings (i.e. declared in code, not the plaything specification JSON)
-        self.lang = self.core_config.get("lang", "en")
+        # self.lang = self.core_config.get("lang", "en")
 
         # TODO take this from core config
         # whether to relay record_activity() to Python logger - generally for debugging
@@ -373,8 +376,7 @@ class Specification:
         asset_file = self._asset_preload(asset_key, "csv")
         if asset_file is None:
             return None
-        
-        import pandas as pd
+
         return pd.read_csv(asset_file, dtype=dtypes)
 
     def load_asset_records_dict(self, asset_key):
