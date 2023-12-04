@@ -420,3 +420,12 @@ class Specification:
     
         with open(asset_file, 'rb') as f:
             return pickle.load(f)
+        
+    def load_asset_json(self, asset_key):
+        # arbitrary JSON, parsed to a dict
+        asset_file = self._asset_preload(asset_key, "json")
+        if asset_file is None:
+            return None
+    
+        with open(asset_file, 'r') as f:
+            return json.load(f)
