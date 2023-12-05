@@ -1,9 +1,24 @@
 
 import plotly.graph_objects as go
 
-# use Plotly to make something similar to a Shap Waterfall plot using output from the Model Driven Synthesiser Jupyter notebook.
-# use_rec is a dict for a single prediction instance, with attribute and Shap values
 def shap_force_plot(attr_index, attr_names, use_rec, title="Attribute Forces", x_axis_text="Probability/%", y_axis_text="Attribute"):
+    """Use Plotly to make something similar to a Shap Waterfall plot using output from the Model Driven Synthesiser Jupyter notebook.
+
+    :param attr_index: _description_
+    :type attr_index: list(str)
+    :param attr_names: _description_
+    :type attr_names: list(str)
+    :param use_rec: is a dict for a single prediction instance, with attribute and Shap values
+    :type use_rec: dict
+    :param title: _description_, defaults to "Attribute Forces"
+    :type title: str|None, optional
+    :param x_axis_text: _description_, defaults to "Probability/%"
+    :type x_axis_text: str|None, optional
+    :param y_axis_text: _description_, defaults to "Attribute"
+    :type y_axis_text: str|None, optional
+    :return: _description_
+    :rtype: go.Figure
+    """
     p = use_rec["shap_probs"]
     bases = [b * 100 for b in p[:-1]]
     steps = [100 * (p[i+1] - p[i]) for i in range(len(p) - 1)]
@@ -22,8 +37,7 @@ def shap_force_plot(attr_index, attr_names, use_rec, title="Attribute Forces", x
         arrow_steps_x += [bases[i], bases[i]]
         arrow_steps_y += [y_labels[i], y_labels[i + 1]]
 
-    fig = go.Figure(
-        data=[
+    traces = [
             go.Bar(
                 # each list gets an extra item inserted at the start, which is the "Base"
                 base=bases[0:1] + bases,
@@ -49,11 +63,14 @@ def shap_force_plot(attr_index, attr_names, use_rec, title="Attribute Forces", x
                 marker={"color": "black", "symbol": "arrow-up", "angleref": "previous", "size": 12},
                 hoverinfo="skip"
             )
-        ],
-        layout={
-            "title": title,
+        ]
+    
+    layout = {
+            "title": {"text": title, "x": 0.5, "xref": "paper", "xanchor": "center"},
             "showlegend": False,
             "xaxis": {"title": x_axis_text, "fixedrange": True},
-            "yaxis": {"title": y_axis_text, "fixedrange": True}})
-
-    return fig
+            "yaxis": {"title": y_axis_text, "fixedrange": True},
+            "margin": go.layout.Margin(l=0, r=0, b=80, t=30)
+        }
+    
+    return go.Figure(data=traces, layout=layout)
