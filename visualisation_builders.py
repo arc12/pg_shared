@@ -70,7 +70,7 @@ def shap_force_plot(attr_index, attr_names, use_rec, title="Attribute Forces", x
             "showlegend": False,
             "xaxis": {"title": x_axis_text, "fixedrange": True},
             "yaxis": {"title": y_axis_text, "fixedrange": True},
-            "margin": go.layout.Margin(l=0, r=0, b=80, t=30)
+            "margin": go.layout.Margin(l=0, r=0, b=30, t=30)
         }
     
     return go.Figure(data=traces, layout=layout)
