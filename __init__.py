@@ -399,18 +399,32 @@ class Specification:
         
         return records
 
-    def load_asset_markdown(self, asset_key, render=False):
+    def load_asset_markdown(self, asset_key, render=False, replacements=None):
+        """Loads a markdown file by its asset_map key and optionally renders.
+
+        :param asset_key: key to member of specification "asset_map"
+        :type asset_key: str
+        :param render: Whether to convert the markdown to HTML, defaults to False
+        :type render: bool, optional
+        :param replacements: Dict containing replacements to use in .format() method of the markdown, defaults to None
+        :type replacements: dict|None, optional
+        :return: markdown or html
+        :rtype: str
+        """
         asset_file = self._asset_preload(asset_key, "md")
-        if asset_file is None:
-            return None
-        
-        with open(asset_file, 'r') as f:
-            md = f.read()
-        
-        if render:
-            return markdown.markdown(md)
-        else:
-            return md
+        ret_val = None
+        if asset_file is not None:
+            with open(asset_file, 'r') as f:
+                md = f.read()
+            
+            if render:
+                if replacements is None:
+                    ret_val = markdown.markdown(md)
+                else:
+                    ret_val = markdown.markdown(md.format(**replacements))
+            else:
+                ret_val = md
+        return ret_val
 
     def load_asset_object(self, asset_key):
         # un-pickles something
