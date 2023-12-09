@@ -70,7 +70,7 @@ def read_json_file(json_path: str, soft_error: bool = False) -> dict | str:
     """
     retval = dict()
     try:
-        with open(json_path, 'r') as j:
+        with open(json_path, 'r', encoding="utf-8") as j:
             retval = json.load(j)
     except FileNotFoundError:
         logging.critical(f"Failed to find JSON file at: {json_path}.")
@@ -330,6 +330,8 @@ class Specification:
         """
         problems = {k: "missing from specification" for k in required_keys if k not in self.asset_map}
 
+        # TODO add JSON file syntax validation check
+
         for k in required_keys + optional_keys:
             if k in self.asset_map:
                 asset_file = self._make_asset_path(k)
@@ -441,5 +443,4 @@ class Specification:
         if asset_file is None:
             return None
     
-        with open(asset_file, 'r') as f:
-            return json.load(f)
+        return read_json_file(asset_file)
