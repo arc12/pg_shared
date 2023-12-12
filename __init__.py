@@ -231,7 +231,10 @@ class LangstringsBase:
 
     def get(self, string_code):
         # get the lang string for the passed string_code, returning warning placeholders if either the string code is not known or doesnt support the lang
-        return self.langstrings.get(string_code, f"!!{string_code}!!").get(self.lang, f"!!{string_code}.{self.lang}!!")
+        ls_entry = self.langstrings.get(string_code, f"!!{string_code}!!")
+        if isinstance(ls_entry, dict):
+            ls_entry = ls_entry.get(self.lang, f"!!{string_code}.{self.lang}!!")
+        return ls_entry
 
 
 class Specification:
