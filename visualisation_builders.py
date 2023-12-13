@@ -1,7 +1,7 @@
 
 import plotly.graph_objects as go
 
-def shap_force_plot(attr_index, attr_names, use_rec, title="Attribute Forces", x_axis_text="Probability/%", y_axis_text="Attribute"):
+def shap_force_plot(attr_index, attr_names, use_rec, title="Attribute Forces", x_axis_text="Probability/%", y_axis_text="Attribute", height=300):
     """Use Plotly to make something similar to a Shap Waterfall plot using output from the Model Driven Synthesiser Jupyter notebook.
 
     :param attr_index: _description_
@@ -47,7 +47,8 @@ def shap_force_plot(attr_index, attr_names, use_rec, title="Attribute Forces", x
                 marker_color=["black"] +["deeppink" if ip else "dodgerblue" for ip in is_positive],
                 text=[""] + bar_text,  # text of attribute value is aligned with the left end for -ve steps and right for +ve
                 # text=[""] + [f"{t} >" if ip else f"< {t}" for ip, t in zip(is_positive, bar_text)],  # < and > markers might be confusing with numerical
-                hoverinfo="text", hovertext = [""] + [f"{s:+.1f}% => {b+s:.1f}%" for s, b in zip(steps, bases[:-1])]
+                hoverinfo="text",
+                hovertext = [""] + [f"{a} = {t} : {s:+.1f}% => {b+s:.1f}%" for a, t, s, b in zip(y_labels[1:], bar_text, steps, bases)]
             ),
             # base and final blobs
             go.Scatter(
@@ -55,7 +56,7 @@ def shap_force_plot(attr_index, attr_names, use_rec, title="Attribute Forces", x
                 y=[y_labels[0], y_labels[-1]],
                 mode="markers",
                 marker={"color": "gray", "size": 10},
-                hovertemplate="%{x:.1f}%"
+                hovertemplate="%{x:.1f}%<extra></extra>"
             ),
             # step arrows
             go.Scatter(
@@ -71,6 +72,7 @@ def shap_force_plot(attr_index, attr_names, use_rec, title="Attribute Forces", x
             "showlegend": False,
             "xaxis": {"title": x_axis_text, "fixedrange": True},
             "yaxis": {"title": y_axis_text, "fixedrange": True, "side": "right"},
+            "height": height,
             "margin": go.layout.Margin(l=0, r=0, b=30, t=30)
         }
     
