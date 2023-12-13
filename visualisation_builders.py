@@ -45,7 +45,8 @@ def shap_force_plot(attr_index, attr_names, use_rec, title="Attribute Forces", x
                 x=[0] + steps,
                 orientation="h",
                 marker_color=["black"] +["deeppink" if ip else "dodgerblue" for ip in is_positive],
-                text=[""] + [f"{t} >" if ip else f"< {t}" for ip, t in zip(is_positive, bar_text)],
+                text=[""] + bar_text,  # text of attribute value is aligned with the left end for -ve steps and right for +ve
+                # text=[""] + [f"{t} >" if ip else f"< {t}" for ip, t in zip(is_positive, bar_text)],  # < and > markers might be confusing with numerical
                 hoverinfo="text", hovertext = [""] + [f"{s:+.1f}% => {b+s:.1f}%" for s, b in zip(steps, bases[:-1])]
             ),
             # base and final blobs
