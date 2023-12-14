@@ -19,7 +19,8 @@ def timer_main(timer, core, plaything_name):
         url_base = environ.get("PLAYGROUND_PING_URL_BASE", None)  # e.g. = "https://dlpg-test1.azurewebsites.net"
 
         if url_base is None:
-            logging.warn(f"Environ PLAYGROUND_PING_URL_BASE is not set; abort pinging {plaything_name}.")
+            logging.error(f"Environ PLAYGROUND_PING_URL_BASE is not set; abort pinging {plaything_name}.")
+            exit(1)  # make sure this shows up in the monitor as a fai.
         else:
             url = f"{url_base}/{plaything_name}/ping"
             try:
