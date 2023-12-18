@@ -18,6 +18,8 @@ from pg_shared import blueprints
 from flask import request, abort
 from werkzeug.exceptions import HTTPException
 
+import urllib3
+
 import pandas as pd  # pandas import is responsible for slow start-up of the app so use of "keep_warm" timerTrigger functions is recommended
 import markdown
 from csv import DictReader
@@ -105,7 +107,7 @@ class Core:
             )
 
         # load core config 
-        self.config_base_path = "/Config" if self.is_function_app else path.join(["..", "..", "Config"])
+        self.config_base_path = "/Config" if self.is_function_app else path.join("..", "..", "Config")
         self.config_plaything_path = path.join(self.config_base_path, self.plaything_name)
         if not path.exists(self.config_base_path):
             logging.critical(f"Failed to find config base path at: {path.abspath(self.config_base_path)}")
@@ -133,14 +135,17 @@ class Core:
         self.relay_activity = True
         
         # set up cosmos db (read in setting and access key)
+        if "localhost" in environ["PLAYGROUND_COSMOSDB_URI"] or "127.0.0.1" in environ["PLAYGROUND_COSMOSDB_URI"]:
+            # suppress unverified HTTPS requests for local dev
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         # NOTE: must set up database and container in CosmosDB (in Azure or emulator); set plaything_name as the partition key
-        self.record_activity_config = self.core_config.get("activity", {"enabled": False})
+        self.activity_config = self.core_config.get("activity", {"enabled": False})
         self.record_activity_container = None
-        if self.record_activity_config.get("enabled", False):
+        if self.activity_config.get("enabled", False):
             try:
                 cosmos_client = CosmosClient(environ["PLAYGROUND_COSMOSDB_URI"], credential=environ["PLAYGROUND_COSMOSDB_KEY"])
-                db = cosmos_client.get_database_client(self.record_activity_config["database"])
-                self.record_activity_container = db.get_container_client(self.record_activity_config["container"])
+                db = cosmos_client.get_database_client(self.activity_config["database"])
+                self.record_activity_container = db.get_container_client(self.activity_config["container"])
             except KeyError as ex:
                 logging.error("Failed to set up activity logging. Likely cause is a mis-configuration of environment variables or defective core_config.json. "
                               f"Missing key is: {ex}")
@@ -447,3 +452,62 @@ class Specification:
             return None
     
         return read_json_file(asset_file)
+
+# A cut-down and variant for the "analytics" group. TODO refactor a base class
+class AnalyticsCore:
+    def __init__(self, at_name):
+        """_summary_
+
+        :param at_name: name as used in URL construction and log file naming. This is the "analytics thing" (-at suffix)
+            or a background timerTrigger (or manual) driven aggregator (-agg suffix).
+        :type at_name: str
+        """
+        self.at_name = at_name
+
+        # check env vars to determine whether running as a function app running on Azure
+        # Used to use "AzureWebJobsStorage" but it now gives True for local use since adding the Timer
+        self.is_function_app = "WEBSITE_CONTENTSHARE" in environ
+
+        # set up python logging if required. Function apps log into Azure Application Insights, which requires no spec here, but for other use:
+        if not self.is_function_app:
+            makedirs("../Logs", exist_ok=True)
+            logging.basicConfig(
+                handlers=[
+                    RotatingFileHandler(f'../Logs/{at_name}.log', maxBytes=100000, backupCount=5),
+                    StreamHandler(sys.stdout)
+                ],
+                level=logging.INFO,  # TODO obtain from config
+                format='%(asctime)s [%(levelname)s] %(message)s'
+            )
+
+        # load core config 
+        self.config_base_path = "/Config" if self.is_function_app else path.join("..", "..", "Config")
+        if not path.exists(self.config_base_path):
+            logging.critical(f"Failed to find config base path at: {path.abspath(self.config_base_path)}")
+            return
+        self.core_config = read_json_file(path.join(self.config_base_path, "core_config.json"))
+
+        # how should the URL paths start
+        self.at_root = "/" + self.at_name.lower() if self.core_config.get("plaything_name_in_path", False) else ""
+        
+        # Cosmos DB. BOTH activity logging and aggregation must be enabled
+        self.activity_config = self.core_config.get("activity", {"enabled": False})
+        if "localhost" in environ["PLAYGROUND_COSMOSDB_URI"] or "127.0.0.1" in environ["PLAYGROUND_COSMOSDB_URI"]:
+            # suppress unverified HTTPS requests for local dev
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        self.record_activity_container = None
+        self.aggregated_container = None
+        if self.activity_config.get("enabled", False) and self.activity_config.get("agg_enabled", False):
+            try:
+                cosmos_client = CosmosClient(environ["PLAYGROUND_COSMOSDB_URI"], credential=environ["PLAYGROUND_COSMOSDB_KEY"])
+                db = cosmos_client.get_database_client(self.activity_config["database"])
+                self.record_activity_container = db.get_container_client(self.activity_config["container"])
+                self.aggregated_container = db.get_container_client(self.activity_config["agg_container"])
+            except KeyError as ex:
+                logging.error("Failed to set up activity recording or aggregation containers. Likely cause is a mis-configuration of environment variables or defective core_config.json. "
+                              f"Missing key is: {ex}")
+            except ServiceRequestError as ex:
+                logging.error(f"Failed to set up connection to {self.activity_config['database']} due to a ServiceRequestError when attempting a CosmosDB connection.")
+        else:
+            logging.warn("Activity aggregation is disabled. Refer to core_config.json.")
+        
