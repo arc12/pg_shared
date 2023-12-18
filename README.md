@@ -5,7 +5,7 @@ __Refer to "Plaything Configuration.md" for information on the content of config
 
 ## Playground Configuration Files
 All playthings have a separate configuration folder - named according to the PLAYTHING_NAME variable in the core Plaything Python file (see below) - within a root configuration folder which applies to the whole Playground. The root configuration folder should be located as follows:
-- for local development and plain Flask execution, in ../Config relative to the plaything source code folder.
+- for local development and plain Flask execution, in ../../Config relative to the plaything source code folder.
 - for Azure Function App execution, in an Azure File Share mounted as /Config.
 
 ### Core Configuration

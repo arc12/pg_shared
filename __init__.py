@@ -105,7 +105,7 @@ class Core:
             )
 
         # load core config 
-        self.config_base_path = "/Config" if self.is_function_app else "../Config"
+        self.config_base_path = "/Config" if self.is_function_app else path.join(["..", "..", "Config"])
         self.config_plaything_path = path.join(self.config_base_path, self.plaything_name)
         if not path.exists(self.config_base_path):
             logging.critical(f"Failed to find config base path at: {path.abspath(self.config_base_path)}")
