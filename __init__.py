@@ -510,4 +510,94 @@ class AnalyticsCore:
                 logging.error(f"Failed to set up connection to {self.activity_config['database']} due to a ServiceRequestError when attempting a CosmosDB connection.")
         else:
             logging.warn("Activity aggregation is disabled. Refer to core_config.json.")
+    
+    # --------- these are variants of what appears in the Specification class
+    def make_menu(self, use_menu_items, langstrings, base_path, current_view, query_string="", for_dash=False):
+        # Variant which does not rely on specification-level config and does not require menu=1 in query string
+
+        if len(use_menu_items) == 0:
+            return ""
+
+        # build menu HTML including highlight of active page. This part should be edited to follow changes in Specification class
+        if len(query_string) > 0:
+            if query_string[0] != "?":
+                query_string = "?" + query_string
+        items = []
+        for item_view, item_ls_key in use_menu_items.items():
+            item_title = langstrings.get(item_ls_key)
+            active = current_view == item_view
+            item_path = f"{base_path}/{item_view}{query_string}"
+
+            link_class_name = "nav-link px-2 " + ("link-secondary" if active else "link-dark")
+            if for_dash:
+                items.append(html.Li(html.A(item_title, href=item_path, className=link_class_name)))
+            else:
+                items.append(f'<li><a href="{item_path}" class="{link_class_name}">{item_title}</a></li>')
+
+        if for_dash:
+            menu = html.Header(
+                [
+                    html.Span("DLP | ", className="ms-2"),
+                    html.Ul(items, className="nav col-md-auto justify-content-start mb-md-0"
+                    )
+                ],
+                className="d-flex flex-row flex-wrap align-items-center justify-content-start py-2 mb-4 border-bottom"
+            )
+        else:
+            header = """
+            <header class="d-flex flex-row flex-wrap align-items-center justify-content-start py-2 mb-3 border-bottom">    
+                <span class="ms-2">DLP |</span>
+                <ul class="nav col-md-auto justify-content-start mb-md-0">{items_string}</ul>
+            </header>"""
+            menu = header.format(items_string="\n".join(items))
         
+        return menu
+
+    def _asset_preload(self, asset_name, lang, asset_type):
+        """Performs checks which are useful prior to attempting to load an asset:
+        - is the key present
+        - is the mapped file present
+        - does the file have the correct extension
+
+        :param asset_name: name of asset without lang suffix
+        :type asset_name: str
+        :param asset_type: file type extension expected. do not include "."
+        :type asset_type: str
+        :return: Path to asset file if all checks pass, otherwise None.
+        :rtype: str|None
+        """
+
+        asset_file = path.join(self.config_base_path, self.at_name, "assets", f"{asset_name}_{lang}.{asset_type}")
+
+        if not path.exists(asset_file):
+            logging.error(f"Failed to find file {asset_file}.")
+            return None
+        
+        return asset_file
+    
+    def load_asset_markdown(self, asset_name, lang, render=False, replacements=None):
+        """Loads a markdown file by its asset_map key and optionally renders.
+
+        :param asset_name: file name part without _{lang} suffix or file type extension
+        :type asset_name: str
+        :param render: Whether to convert the markdown to HTML, defaults to False
+        :type render: bool, optional
+        :param replacements: Dict containing replacements to use in .format() method of the markdown, defaults to None
+        :type replacements: dict|None, optional
+        :return: markdown or html
+        :rtype: str
+        """
+        asset_file = self._asset_preload(asset_name, lang, "md")
+        ret_val = None
+        if asset_file is not None:
+            with open(asset_file, 'r') as f:
+                md = f.read()
+            
+            if render:
+                if replacements is None:
+                    ret_val = markdown.markdown(md)
+                else:
+                    ret_val = markdown.markdown(md.format(**replacements))
+            else:
+                ret_val = md
+        return ret_val
