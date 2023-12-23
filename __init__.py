@@ -52,6 +52,7 @@ def prepare_app(flask_app, url_prefix):
     flask_app.secret_key = environ.get("FLASK_COOKIE_KEY", "WGFEhV5j3muB5A")
     # This should allow the session to persist between URL changes in an iframe
     flask_app.config.update(SESION_COOKIE_SAMESITE="None")
+    flask_app.config.update(SESSION_COOKIE_SECURE=True)
 
     # shared templates and CSS
     flask_app.register_blueprint(blueprints.make_core_bp(url_prefix))
